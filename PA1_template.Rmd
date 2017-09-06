@@ -1,25 +1,139 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Reproducible Research Peer graded assignment 1"
+author: "Menno Oerlemans"
+date: "6 september 2017"
+output: html_document
 ---
 
-
 ## Loading and preprocessing the data
+The data is loaded from the URL given.
 
+The class was analysed after loading the file from the downloaded zip file and the only collumn which had to be adjusted was the date collumn.
+
+```{r}
+library(dplyr)
+library(lubridate)
+
+URL_file <- c("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip")
+download.file(URL_file, "~/R/Course 5/Factivity.zip")
+downloaddatum <- Sys.Date()
+
+Factivity <- read.csv((unz("~/R/Course 5/Factivity.zip", "activity.csv")))
+Factivity$date <- as.Date(as.character(Factivity$date))
+print(downloaddatum)
+
+```
 
 
 ## What is mean total number of steps taken per day?
+This step exists of two parts:  
+- Summerizing the steps perday  
+- plotting the steps in a histogram   
 
+```{r}
+#Second question: histogram number of steps per day
+Sum_per_day <- Factivity %>% group_by(date) %>% summarize(total_steps=sum(steps))
+hist(Sum_per_day$total_steps, breaks = 20,  xlab = "Day", ylab = "number of steps", main = "Number of steps per day")
 
+```
 
 ## What is the average daily activity pattern?
 
+Within this part the bullets 3 to 5 are answered.
 
+The first question is the mean and the medium. Here the NA's are excluded.
+```{r}
+#Third question: mean and medium steps per day
+
+Mean_per_day   <- mean( Sum_per_day$total_steps, na.rm = TRUE)
+Median_per_day <- median(Sum_per_day$total_steps, na.rm = TRUE)
+
+cat("Mean   :", Mean_per_day)
+cat("  Median :", Median_per_day)
+```
+
+The next question is the plot with the time series and the steps at that particular time of day. You can see that the top is between 800 and 900.
+
+```{r}
+#Forth question: time series plot of average number of steps taken
+
+Mean_per_interval <- filter(Factivity, !is.na(Factivity$steps))
+Mean_per_interval <- Mean_per_interval %>% group_by(interval) %>% summarize(total_steps=mean(steps))
+plot(Mean_per_interval$interval, Mean_per_interval$total_steps, type = 'l',xlab = "daynumber", ylab = "number of steps", main = "Average number of steps per interval")
+```
+
+The next question is the interval with the highest number of steps. This is 835. 
+
+```{r}
+# Fifth question: interval that takes on average maximum number of steps per day
+max_steps <- filter(Mean_per_interval, Mean_per_interval$total_steps == max(Mean_per_interval$total_steps))
+print(max_steps)
+```
 
 ## Imputing missing values
+Within this question two bullets are answered:  
+- the impute strategy  
+- plotting the results  
 
+### Impute strategy
+During the day the mean of the steps during a certain intervals varies a lot.This means that de daily average is not a good impute strategy. The other available variable is the interval. The impute strategy choosen was the mean during the interval in the available observations. There are no intervals with no observation at all.
 
+```{r}
+# chosen to impute the steps with NA with the average of the interval 
+
+Number_of_NA <- sum(is.na(Factivity$steps))
+
+aant_int <- as.integer(count(Factivity))
+
+for (i in 1:aant_int) {
+    if(is.na(Factivity$steps[[i]])) {
+        Interval <- as.integer(Factivity$interval[[i]])
+        Mean_step <- filter(Mean_per_interval, Mean_per_interval$interval == Interval)
+        Factivity$steps[[i]] <- as.integer(Mean_step$total_steps)
+    } 
+}
+```
+
+The plotting code was identical as the code for Question 2.
+
+```{r}
+# Seventh question: Histogram of the total number of steps taken each day 
+# after missing values are imputed
+
+Sum_per_day <- Factivity %>% group_by(date) %>% summarize(total_steps=sum(steps))
+hist(Sum_per_day$total_steps, breaks = 20,  xlab = "Day", ylab = "number of steps", main = "Number of steps per day")
+
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+To answer the last question three steps were coded:  
+1. Splitting the data in weekday's (day 2 to 6) and weekends (day 1 and 7)  
+2. calculating the mean per interval (weekend and weekdays)  
+3. printing the two plots (one for weekend en one for weekdays) where the average number of steps per interval are shown.  
+
+
+```{r}
+# Eighth question: Panel plot comparing the average number of steps taken
+# per 5-minute interval across weekdays and weekends
+
+Factivity$weekday1 <- wday(Factivity$date)
+for (i in 1:aant_int) {
+        if(Factivity$weekday1[[i]] %in% c(2, 3, 4, 5, 6)) {
+                Factivity$weekday2[[i]] <- "weekday"    
+        } else {
+                 Factivity$weekday2[[i]] <- "weekend"
+         }
+}
+
+Fact_weekday_interval <- Factivity %>% group_by(weekday2, interval) %>% summarize(total_steps=mean(steps))
+
+xyplot(total_steps ~ interval | weekday2, 
+       data = Fact_weekday_interval, 
+       layout = c(1,2), 
+       type = 'l', 
+       main = "Main number of steps per interval weekend versus weekday",
+       xlab = "daynumber", 
+       ylab = "mean steps")
+
+```
