@@ -2,7 +2,7 @@
 title: "Reproducible Research Peer graded assignment 1"
 author: "Menno Oerlemans"
 date: "6 september 2017"
-output: html_document
+output: github_document
 ---
 
 ## Loading and preprocessing the data
@@ -11,8 +11,7 @@ The data is loaded from the URL given.
 The class was analysed after loading the file from the downloaded zip file and the only collumn which had to be adjusted was the date collumn.
 
 ```{r global_options, include=FALSE}
-knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figure/',
-                      echo=FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(fig.path='Figure/')
 ```
 
 ```{r}
@@ -38,7 +37,7 @@ This step exists of two parts:
 ```{r}
 #Second question: histogram number of steps per day
 Sum_per_day <- Factivity %>% group_by(date) %>% summarize(total_steps=sum(steps))
-hist(Sum_per_day$total_steps, breaks = 20,  xlab = "Day", ylab = "number of steps", main = "Number of steps per day")
+hist(Sum_per_day$total_steps, breaks = 20,  xlab = "Daynumber", ylab = "number of steps", main = "Number of steps per day")
 
 ```
 
@@ -106,7 +105,7 @@ The plotting code was identical as the code for Question 2.
 # after missing values are imputed
 
 Sum_per_day <- Factivity %>% group_by(date) %>% summarize(total_steps=sum(steps))
-hist(Sum_per_day$total_steps, breaks = 20,  xlab = "Day", ylab = "number of steps", main = "Number of steps per day")
+hist(Sum_per_day$total_steps, breaks = 20,  xlab = "daynumber", ylab = "number of steps", main = "Number of steps per day")
 
 ```
 

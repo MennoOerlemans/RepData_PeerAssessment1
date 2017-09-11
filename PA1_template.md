@@ -1,61 +1,121 @@
-# Reproducible Research: Peer Assessment 1
+Reproducible Research Peer graded assignment 1
+================
+Menno Oerlemans
+6 september 2017
 
+Loading and preprocessing the data
+----------------------------------
 
-## Loading and preprocessing the data
+The data is loaded from the URL given.
 
-'''{r}
-# First question: Downloading and reading the file
-URL_file <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+The class was analysed after loading the file from the downloaded zip file and the only collumn which had to be adjusted was the date collumn.
+
+``` r
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+library(lubridate)
+
+URL_file <- c("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip")
 download.file(URL_file, "~/R/Course 5/Factivity.zip")
 downloaddatum <- Sys.Date()
 
 Factivity <- read.csv((unz("~/R/Course 5/Factivity.zip", "activity.csv")))
-
 Factivity$date <- as.Date(as.character(Factivity$date))
+print(downloaddatum)
+```
 
-'''
+    ## [1] "2017-09-11"
 
+What is mean total number of steps taken per day?
+-------------------------------------------------
 
-## What is mean total number of steps taken per day?
+This step exists of two parts:
+- Summerizing the steps perday
+- plotting the steps in a histogram
 
-'''{r}
+``` r
 #Second question: histogram number of steps per day
-
 Sum_per_day <- Factivity %>% group_by(date) %>% summarize(total_steps=sum(steps))
-hist(Sum_per_day$total_steps, breaks = 20,  xlab = "Day", ylab = "number of steps", main = "Number of steps per day")
+hist(Sum_per_day$total_steps, breaks = 20,  xlab = "Daynumber", ylab = "number of steps", main = "Number of steps per day")
+```
 
-'''
+![](Figure/unnamed-chunk-2-1.png)
 
-## What is the average daily activity pattern?
+What is the average daily activity pattern?
+-------------------------------------------
 
-'''{r}
+Within this part the bullets 3 to 5 are answered.
+
+The first question is the mean and the medium. Here the NA's are excluded.
+
+``` r
 #Third question: mean and medium steps per day
 
 Mean_per_day   <- mean( Sum_per_day$total_steps, na.rm = TRUE)
 Median_per_day <- median(Sum_per_day$total_steps, na.rm = TRUE)
 
 cat("Mean   :", Mean_per_day)
-cat("Median :", Median_per_day)
+```
 
+    ## Mean   : 10766.19
 
+``` r
+cat("  Median :", Median_per_day)
+```
+
+    ##   Median : 10765
+
+The next question is the plot with the time series and the steps at that particular time of day. You can see that the top is between 800 and 900.
+
+``` r
 #Forth question: time series plot of average number of steps taken
 
 Mean_per_interval <- filter(Factivity, !is.na(Factivity$steps))
 Mean_per_interval <- Mean_per_interval %>% group_by(interval) %>% summarize(total_steps=mean(steps))
 plot(Mean_per_interval$interval, Mean_per_interval$total_steps, type = 'l',xlab = "daynumber", ylab = "number of steps", main = "Average number of steps per interval")
+```
 
+![](Figure/unnamed-chunk-4-1.png)
+
+The next question is the interval with the highest number of steps. This is 835.
+
+``` r
 # Fifth question: interval that takes on average maximum number of steps per day
 max_steps <- filter(Mean_per_interval, Mean_per_interval$total_steps == max(Mean_per_interval$total_steps))
 print(max_steps)
+```
 
+    ## Source: local data frame [1 x 2]
+    ## 
+    ##   interval total_steps
+    ##      (int)       (dbl)
+    ## 1      835    206.1698
 
+Imputing missing values
+-----------------------
 
-'''
+Within this question two bullets are answered:
+- the impute strategy
+- plotting the results
 
-## Imputing missing values
+### Impute strategy
 
-'''{r}
+During the day the mean of the steps during a certain intervals varies a lot.This means that de daily average is not a good impute strategy. The other available variable is the interval. The impute strategy choosen was the mean during the interval in the available observations. There are no intervals with no observation at all.
 
+``` r
 # chosen to impute the steps with NA with the average of the interval 
 
 Number_of_NA <- sum(is.na(Factivity$steps))
@@ -67,22 +127,31 @@ for (i in 1:aant_int) {
         Interval <- as.integer(Factivity$interval[[i]])
         Mean_step <- filter(Mean_per_interval, Mean_per_interval$interval == Interval)
         Factivity$steps[[i]] <- as.integer(Mean_step$total_steps)
-        print(Factivity$steps[[i]])    
-
     } 
 }
+```
 
+The plotting code was identical as the code for Question 2.
+
+``` r
 # Seventh question: Histogram of the total number of steps taken each day 
 # after missing values are imputed
 
 Sum_per_day <- Factivity %>% group_by(date) %>% summarize(total_steps=sum(steps))
-hist(Sum_per_day$total_steps, breaks = 20,  xlab = "Day", ylab = "number of steps", main = "Number of steps per day")
+hist(Sum_per_day$total_steps, breaks = 20,  xlab = "daynumber", ylab = "number of steps", main = "Number of steps per day")
+```
 
-'''
+![](Figure/unnamed-chunk-7-1.png)
 
-## Are there differences in activity patterns between weekdays and weekends?
+Are there differences in activity patterns between weekdays and weekends?
+-------------------------------------------------------------------------
 
-'''{r}
+To answer the last question three steps were coded:
+1. Splitting the data in weekday's (day 2 to 6) and weekends (day 1 and 7)
+2. calculating the mean per interval (weekend and weekdays)
+3. printing the two plots (one for weekend en one for weekdays) where the average number of steps per interval are shown.
+
+``` r
 # Eighth question: Panel plot comparing the average number of steps taken
 # per 5-minute interval across weekdays and weekends
 
@@ -104,7 +173,6 @@ xyplot(total_steps ~ interval | weekday2,
        main = "Main number of steps per interval weekend versus weekday",
        xlab = "daynumber", 
        ylab = "mean steps")
+```
 
-
-
-'''
+![](Figure/unnamed-chunk-8-1.png)
